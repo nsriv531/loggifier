@@ -138,7 +138,7 @@ export default function ClickyMonLanding() {
       canvas.removeEventListener("mouseup", onMouseUp);
       canvas.removeEventListener("mouseleave", onMouseUp);
     };
-  }, [showForm]);
+  }, []);
 
   return (
     <div className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-gradient-to-br from-[#ff8800] via-[#ff6fff] to-[#8844ff]">
