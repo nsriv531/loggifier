@@ -15,13 +15,6 @@ export default function ClickyMonLanding() {
   const subtitles = ["Log anything, everything.", "Huge list of games", "Huge list of movies", "Biggest realm of audio media."];
   const [subtitleIndex, setSubtitleIndex] = useState(0);
 
-   useEffect(() => {
-    const interval = setInterval(() => {
-      setSubtitleIndex((prev) => (prev + 1) % subtitles.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [subtitles.length]);
-
   useEffect(() => {
   const canvas = document.getElementById("three-canvas") as HTMLCanvasElement;
   if (!canvas) return;
@@ -39,16 +32,16 @@ export default function ClickyMonLanding() {
   );
   camera.position.z = 5;
 
-const cubes: THREE.Mesh[] = [];
+  const cubes: THREE.Mesh[] = [];
 
   for (let i = 0; i < 10; i++) {
     const geometry = new THREE.BoxGeometry();
     const material = new THREE.MeshBasicMaterial({ color: 0x000000 });
     const cube = new THREE.Mesh(geometry, material);
 
-    cube.position.x = Math.random() * 40 - 20; // Wider X spread
-    cube.position.y = Math.random() * 20 - 10; // Taller Y spread
-    cube.position.z = Math.random() * -30;  
+    cube.position.x = Math.random() * 40 - 20;
+    cube.position.y = Math.random() * 20 - 10;
+    cube.position.z = Math.random() * -30;
 
     cubes.push(cube);
     scene.add(cube);
@@ -73,8 +66,72 @@ const cubes: THREE.Mesh[] = [];
   };
 
   window.addEventListener("resize", handleResize);
-  return () => window.removeEventListener("resize", handleResize);
+
+  // --- Dragging logic ---
+  let selectedCube: THREE.Mesh | null = null;
+  const offset = new THREE.Vector3();
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  const plane = new THREE.Plane();
+  const planeIntersect = new THREE.Vector3();
+
+  const getMouseCoords = (event: MouseEvent) => {
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  };
+
+  const onMouseDown = (event: MouseEvent) => {
+    getMouseCoords(event);
+    raycaster.setFromCamera(mouse, camera);
+
+    const intersects = raycaster.intersectObjects(cubes);
+    if (intersects.length > 0) {
+      selectedCube = intersects[0].object as THREE.Mesh;
+
+      // Create a dragging plane aligned to the cube's z-position and camera view
+      plane.setFromNormalAndCoplanarPoint(
+        camera.getWorldDirection(new THREE.Vector3()).clone().negate(),
+        selectedCube.position
+      );
+
+      raycaster.ray.intersectPlane(plane, planeIntersect);
+      offset.copy(planeIntersect).sub(selectedCube.position);
+    }
+  };
+
+  const onMouseMove = (event: MouseEvent) => {
+    if (!selectedCube) return;
+
+    getMouseCoords(event);
+    raycaster.setFromCamera(mouse, camera);
+
+    if (raycaster.ray.intersectPlane(plane, planeIntersect)) {
+      const newPosition = planeIntersect.clone().sub(offset);
+      selectedCube.position.x = newPosition.x;
+      selectedCube.position.y = newPosition.y;
+      // Z remains unchanged
+    }
+  };
+
+  const onMouseUp = () => {
+    selectedCube = null;
+  };
+
+  canvas.addEventListener("mousedown", onMouseDown);
+  canvas.addEventListener("mousemove", onMouseMove);
+  canvas.addEventListener("mouseup", onMouseUp);
+  canvas.addEventListener("mouseleave", onMouseUp);
+
+  return () => {
+    window.removeEventListener("resize", handleResize);
+    canvas.removeEventListener("mousedown", onMouseDown);
+    canvas.removeEventListener("mousemove", onMouseMove);
+    canvas.removeEventListener("mouseup", onMouseUp);
+    canvas.removeEventListener("mouseleave", onMouseUp);
+  };
 }, []);
+
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#ff8800] via-[#ff6fff] to-[#8844ff]">
