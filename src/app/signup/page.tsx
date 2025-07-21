@@ -3,14 +3,11 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Scene, PerspectiveCamera, WebGLRenderer } from 'three';
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { Geist, Geist_Mono } from "next/font/google";   
-import "./globals.css";
 
-export default function ClickyMonLanding() {
+
+export default function SignUp() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const subtitles = ["Log anything, everything.", "Huge list of games", "Huge list of movies", "Biggest realm of audio media."];
   const [subtitleIndex, setSubtitleIndex] = useState(0);
@@ -105,38 +102,11 @@ export default function ClickyMonLanding() {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="relative z-10 flex flex-col items-center gap-8 p-8 text-center"
       >
-
-        {/* Heading */}
-        <h1 className="font-sans text-black text-5xl/tight font-extrabold tracking-tight drop-shadow-sm">
-          Loggifier
-        </h1>
-
-        {/* Rotating Subtitle */}
-        <div className="min-h-[28px] h-7">
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={subtitleIndex}
-              className="max-w-md font-sans text-lg text-black/80"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -5 }}
-              transition={{ duration: 0.5 }}
-            >
-              {subtitles[subtitleIndex]}
-            </motion.p>
-          </AnimatePresence>
-        </div>
-
-        {/* CTA buttons side by side */}
-        <div className="flex gap-4">
-          <Link href="/signup" className="inline-flex items-center justify-center rounded-full bg-black px-7 py-3 font-medium text-white hover:bg-black/80 active:scale-95">
-  Sign Up
-</Link>
-          <Link href="/dashboard" className="inline-flex items-center justify-center rounded-full bg-black px-7 py-3 font-medium text-white hover:bg-black/80 active:scale-95">
-  Login
-</Link>
-        </div>
       </motion.main>
+      <div>
+        <p>sign up</p>
     </div>
+    </div>
+    
   );
 }
