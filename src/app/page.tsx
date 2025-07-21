@@ -3,7 +3,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Scene, PerspectiveCamera, WebGLRenderer } from 'three';
+import * as THREE from 'three';
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -23,66 +23,58 @@ export default function ClickyMonLanding() {
   }, [subtitles.length]);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const canvas = document.getElementById("three-canvas") as HTMLCanvasElement;
+  if (!canvas) return;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
 
-    let particles: { x: number; y: number; alpha: number; angle: number }[] = [];
-    let mouse = { x: 0, y: 0 };
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+  );
+  camera.position.z = 5;
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+const cubes: THREE.Mesh[] = [];
 
-    const handleResize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
+  for (let i = 0; i < 10; i++) {
+    const geometry = new THREE.BoxGeometry();
+    const material = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const cube = new THREE.Mesh(geometry, material);
 
-    const handleMouseMove = (e: MouseEvent) => {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-      for (let i = 0; i < 3; i++) {
-        particles.push({
-          x: mouse.x,
-          y: mouse.y,
-          alpha: 1,
-          angle: Math.random() * 2 * Math.PI
-        });
-      }
-    };
+    cube.position.x = Math.random() * 40 - 20; // Wider X spread
+    cube.position.y = Math.random() * 20 - 10; // Taller Y spread
+    cube.position.z = Math.random() * -30;  
 
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach((p, i) => {
-        const tickLength = 6;
-        const dx = tickLength * Math.cos(p.angle);
-        const dy = tickLength * Math.sin(p.angle);
+    cubes.push(cube);
+    scene.add(cube);
+  }
 
-        ctx.beginPath();
-        ctx.moveTo(p.x, p.y);
-        ctx.lineTo(p.x + dx, p.y + dy);
-        ctx.strokeStyle = `rgba(0, 0, 0, ${p.alpha})`;
-        ctx.lineWidth = 1.2;
-        ctx.lineCap = "round";
-        ctx.stroke();
+  const animate = () => {
+    requestAnimationFrame(animate);
+    cubes.forEach((cube, i) => {
+      cube.rotation.x += 0.01 + i * 0.001;
+      cube.rotation.y += 0.01 + i * 0.001;
+      cube.position.y += Math.sin(Date.now() * 0.001 + i) * 0.002;
+    });
+    renderer.render(scene, camera);
+  };
 
-        p.alpha -= 0.025;
-        if (p.alpha <= 0) particles.splice(i, 1);
-      });
-      requestAnimationFrame(animate);
-    };
+  animate();
 
-    window.addEventListener("resize", handleResize);
-    window.addEventListener("mousemove", handleMouseMove);
-    animate();
+  const handleResize = () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  };
 
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      window.removeEventListener("mousemove", handleMouseMove);
-    };
-  }, []);
+  window.addEventListener("resize", handleResize);
+  return () => window.removeEventListener("resize", handleResize);
+}, []);
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#ff8800] via-[#ff6fff] to-[#8844ff]">
@@ -99,6 +91,9 @@ export default function ClickyMonLanding() {
         transition={{ repeat: Infinity, ease: "linear", duration: 40 }}
       />
 
+<div className="absolute inset-0 z-0">
+  <canvas id="three-canvas" className="w-full h-full" />
+</div>
       <motion.main
         initial={{ opacity: 0, y: 32 }}
         animate={{ opacity: 1, y: 0 }}
